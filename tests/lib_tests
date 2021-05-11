@@ -1,0 +1,35 @@
+#!/bin/bash
+# some tests for gostripes-para library functions
+
+set -eu
+
+script_path="$(realpath $0)"
+base_dir="${script_path%/*/*}"
+lib_dir="${base_dir}/lib/"
+test_dir="${base_dir}/tests"
+
+
+msg() { >&2 echo -e "  $@"; }
+
+
+test_build_sample_sheet() {
+	msg "Testing build_sample_sheet()..."
+	source "${lib_dir}/build_sample_sheet.bash"
+	# make some fake fastq files to glob
+	msg "  generating phony fastq files..."
+	mkdir -vp "${test_dir}/fake-fastq/"
+	touch "${test_dir}/fake-fastq/"empty_sample_{1,2}_S00_R{1,2}_001.fastq
+	build_sample_sheet "${test_dir}/fake-fastq/" "${test_dir}/test_sample_sheet.txt" ''
+	# check output
+	local line
+	while IFS=$'\t' read -r line; do
+		[[ ${line:0:1} == '#' ]] && continue  # skip comments
+		echo "$line"
+	done < "${test_dir}/test_sample_sheet.txt"
+}
+
+
+# run tests
+test_build_sample_sheet
+
+exit
